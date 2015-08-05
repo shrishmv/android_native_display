@@ -21,6 +21,10 @@ import android.view.View;
 import android.view.TextureView.SurfaceTextureListener;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -33,13 +37,31 @@ public class MainActivity extends Activity {
 
 	public static String 		LOGTAG = "NDK_DISPLAY";
 	private DisplayTest 		testTask = null;
-	private Surface 			mSurface;
-	private ZoomFrameLayoutView zoomView;
-	private RelativeLayout 		main_container;
-	
+	//private AnimationTest 		animationTask = null;
+	private Surface 			mSSurface;
+	private Surface 			mTSurface;
+
+	private Button 						mButtonView;
 	private ArrayList<TestVector> mtestVectors = new ArrayList<TestVector>();
 	
 	private int fps_sleep = 33 * 1;
+	
+	View TexViewParent; 
+	View SurfViewParent; 
+
+	
+	SurfaceView			mSurfaceView;
+	TextureView			mTextureView;
+	
+	private ZoomFrameLayoutView SzoomView;
+	private ZoomFrameLayoutView TzoomView;
+	
+	private RelativeLayout 				surf_container;
+	private RelativeLayout 				tex_container;
+	
+	//window id
+	// 0 - surfaceview
+	// 1 - textureview
 	
 	//0 - 720
 	//1 - VGA
@@ -68,125 +90,165 @@ public class MainActivity extends Activity {
 		mtestVectors.add(new TestVector("/sdcard/news_640x480.yuv", 480, 640));
 		mtestVectors.add(new TestVector("/sdcard/180p.yuv", 180, 320));
 		
-		View v;
+		mButtonView = (Button) findViewById(R.id.button);
 		
-		if(mSurface_or_texture){
+		findViewById(R.id.button2).setOnClickListener(new OnClickListener() {
 			
-			//SURFACEVIEW - START
-			SurfaceView			mSurfaceView;
-			
-			v = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.surfview, null, false);
-	
-			mSurfaceView = (SurfaceView) v.findViewById(id.surf_view);
-			mSurfaceView.getHolder().addCallback(new Callback() {
+			@Override
+			public void onClick(View v) {
 				
-				@Override
-				public void surfaceDestroyed(SurfaceHolder holder) {
-					Log.d(LOGTAG, " SURFACE DESTROYED , STOPING RENDER");
-					
-					if(null != testTask){
-						testTask.stopRenderThread();
-					}
-					
-					return;
-					
-				}
-				
-				@Override
-				public void surfaceCreated(SurfaceHolder holder) {
-					mSurface = holder.getSurface();
-					int status = nativeDisplaySetWindowPtr(mSurface);
-					if(0 != status){
-						Log.d(LOGTAG, " NATIVE SET CALL FAILED");
-						return;
-					}
-				
-					status = nativeDisplayInit(mtestVectors.get(index).width, 
-											   mtestVectors.get(index).height,
-											   mtestVectors.get(index).path);
-					if(0 != status){
-						Log.d(LOGTAG, " NATIVE INIT CALL FAILED");
-					}
-					return;
-					
-				}
-				
-				@Override
-				public void surfaceChanged(SurfaceHolder holder, int format, int width,
-						int height) {
-					// TODO Auto-generated method stub
-					
-				}
-			});
-			//SURFACEVIEW - END
-		
-		}else{
-		
-			//TEXTUREVIEW - START
-			TextureView			mTextureView;
-		
-			v = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.texview, null, false);
-		
-			mTextureView = (TextureView) v.findViewById(id.tex_view);
-			//mTextureView.setScaleX(1.0001f);
-			
-			mTextureView.setSurfaceTextureListener(new SurfaceTextureListener() {
-				
-				@Override
-				public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-					Log.d(LOGTAG, ">>>>>>>> onSurfaceTextureUpdated");
-				}
-				
-				@Override
-				public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width,
-						int height) {
-					
-				}
-				
-				@Override
-				public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-					
-					Log.d(LOGTAG, " SURFACE DESTROYED , STOPING RENDER");
-					
-					if(null != testTask){
-						testTask.stopRenderThread();
-					}
-					
-					return true;
-				}
-				
-				@Override
-				public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
-						int height) {
-					
-					mSurface = new Surface(surface); 
-					int status = nativeDisplaySetWindowPtr(mSurface);
-					if(0 != status){
-						Log.d(LOGTAG, " NATIVE SET CALL FAILED");
-						return;
-					}
-				
-					status = nativeDisplayInit(mtestVectors.get(index).width, 
-											   mtestVectors.get(index).height,
-											   mtestVectors.get(index).path);
-					if(0 != status){
-						Log.d(LOGTAG, " NATIVE INIT CALL FAILED");
-					}
-					return;
-					
-				}
-			});
-			//TEXTUREVIEW - END		
-			
-		}
-		
-		v.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-		zoomView = new ZoomFrameLayoutView(this);
-		zoomView.addView(v);
+				AnimationSet animSet = new AnimationSet(true);
+				animSet.setInterpolator(new DecelerateInterpolator());
+				animSet.setFillAfter(true);
+				animSet.setFillEnabled(true);
 
-		main_container = (RelativeLayout) findViewById(R.id.main_container);
-		main_container.addView(zoomView); 
-		main_container.invalidate();
+				final RotateAnimation animRotate = new RotateAnimation(0.0f, -360.0f,
+				    RotateAnimation.RELATIVE_TO_SELF, 0.5f, 
+				    RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+
+				animRotate.setDuration(4000);
+				animRotate.setFillAfter(true);
+				animSet.addAnimation(animRotate);
+
+				tex_container.startAnimation(animSet);
+				surf_container.startAnimation(animSet);
+				
+			}
+		});
+		
+		mButtonView.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method st			
+				surf_container.setRotation(rotation);
+				
+				tex_container.setRotation(rotation);
+				rotation += 30.0;
+				
+			}
+		});
+		
+
+		//SURFACEVIEW - START
+		SurfViewParent = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.surfview, null, false);
+
+		mSurfaceView = (SurfaceView) SurfViewParent.findViewById(id.surf_view);
+		mSurfaceView.getHolder().addCallback(new Callback() {
+			
+			@Override
+			public void surfaceDestroyed(SurfaceHolder holder) {
+				Log.d(LOGTAG, " SURFACE DESTROYED , STOPING RENDER");
+				
+				if(null != testTask){
+					testTask.stopRenderThread();
+				}
+				
+				return;
+			}
+			
+			@Override
+			public void surfaceCreated(SurfaceHolder holder) {
+				mSSurface = holder.getSurface();
+				int status = nativeDisplaySetWindowPtr(mSSurface, 0);
+				if(0 != status){
+					Log.d(LOGTAG, " NATIVE SET CALL FAILED");
+					return;
+				}
+			
+				status = nativeDisplayInit(mtestVectors.get(index).width, 
+										   mtestVectors.get(index).height,
+										   mtestVectors.get(index).path, 0);
+				if(0 != status){
+					Log.d(LOGTAG, " NATIVE INIT CALL FAILED");
+				}
+				return;
+			}
+			
+			@Override
+			public void surfaceChanged(SurfaceHolder holder, int format, int width,
+					int height) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		//SURFACEVIEW - END
+	
+		//TEXTUREVIEW - START
+
+	
+		TexViewParent = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.texview, null, false);
+	
+		mTextureView = (TextureView) TexViewParent.findViewById(id.tex_view);
+		mTextureView.setScaleX(1.0001f);
+		
+		mTextureView.setSurfaceTextureListener(new SurfaceTextureListener() {
+			
+			@Override
+			public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+			}
+			
+			@Override
+			public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width,
+					int height) {
+				
+			}
+			
+			@Override
+			public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+				
+				Log.d(LOGTAG, " SURFACE DESTROYED , STOPING RENDER");
+				
+				if(null != testTask){
+					testTask.stopRenderThread();
+				}
+				
+				return true;
+			}
+			
+			@Override
+			public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
+					int height) {
+				
+				mTSurface = new Surface(surface); 
+				int status = nativeDisplaySetWindowPtr(mTSurface, 1);
+				if(0 != status){
+					Log.d(LOGTAG, " NATIVE SET CALL FAILED");
+					return;
+				}
+			
+				status = nativeDisplayInit(mtestVectors.get(index).width, 
+										   mtestVectors.get(index).height,
+										   mtestVectors.get(index).path, 1);
+				if(0 != status){
+					Log.d(LOGTAG, " NATIVE INIT CALL FAILED");
+				}
+				return;
+			}
+		});
+		//TEXTUREVIEW - END		
+
+		LinearLayout.LayoutParams tvlparams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+		LinearLayout.LayoutParams svlparams = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT) ;
+		
+		TexViewParent.setLayoutParams(tvlparams);
+		SurfViewParent.setLayoutParams(svlparams);
+		SzoomView = new ZoomFrameLayoutView(this);
+		TzoomView = new ZoomFrameLayoutView(this);
+		
+		SzoomView.addView(SurfViewParent);
+		
+		TzoomView.addView(TexViewParent);
+
+		surf_container = (RelativeLayout) findViewById(R.id.surf_container);
+		tex_container = (RelativeLayout) findViewById(R.id.tex_container);
+		
+		surf_container.addView(SzoomView);  
+		surf_container.invalidate();
+		
+		tex_container.addView(TzoomView);  
+		tex_container.invalidate();
+		
 		
 	}
 	
@@ -210,13 +272,15 @@ public class MainActivity extends Activity {
 		
 	}
 	
+	
+	
 	@Override
 	protected void onPause() {
 		super.onPause();
 		
-		if(null != testTask){
-			testTask.stopRenderThread();
-		}
+//		if(null != testTask){
+//			testTask.stopRenderThread();
+//		}
 		
 	}
 	
@@ -237,10 +301,10 @@ public class MainActivity extends Activity {
 	/**
 	 * native method to start the ndk tests
 	 */
-	public static native int nativeDisplayDeInit();
-	public static native int nativeDisplayInit(int width, int height, String path);
-	public static native int nativeDisplayRenderFrame();
-	public static native int nativeDisplaySetWindowPtr(Surface surface);
+	public static native int nativeDisplayDeInit(int id);
+	public static native int nativeDisplayInit(int width, int height, String path,int id);
+	public static native int nativeDisplayRenderFrame(int id);
+	public static native int nativeDisplaySetWindowPtr(Surface surface,int id);
 
 	/**
 	 * Static method to load the native library
@@ -248,6 +312,40 @@ public class MainActivity extends Activity {
     static {
         System.loadLibrary("native_display");
     }
+    
+    
+    
+//    class AnimationTest extends AsyncTask<Void, Void, Integer> {
+//
+//		@Override
+//		protected Integer doInBackground(Void... params) {
+//			
+//			while(true){
+//				try {
+//					Thread.sleep(1000);
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				
+//				Log.d(LOGTAG, "UI - ROTATE");
+//				
+//				mSurfaceView.setRotation(rotation);
+//				mTextureView.setRotation(rotation);
+//				rotation += 30.0;
+//			}
+//			
+//		}
+//		
+//		@Override
+//		protected void onPostExecute(Integer result) {
+//			animationTask = null;
+//			 rotation = 0;
+//		}
+//    	
+//    }
+    
+    float rotation = 0;
     
     /**
      * Background thread to start the ndk render tests
@@ -260,6 +358,7 @@ public class MainActivity extends Activity {
     	boolean runTest = true;
     	
     	public void stopRenderThread(){
+    		Log.d(LOGTAG, "UI - WWWWTTTTTTFFFFFFF");
     		runTest = false;
     	}
     	
@@ -280,13 +379,16 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 				}
 				
-				nativeDisplayRenderFrame();
+				nativeDisplayRenderFrame(0);
+				nativeDisplayRenderFrame(1);
 
 			}
 			
-			nativeDisplayDeInit();
+			nativeDisplayDeInit(0);
+			nativeDisplayDeInit(1);
 			
-			mSurface = null;			
+			mSSurface = null;	
+			mTSurface = null;
 			Log.d(LOGTAG, "EXITING RENDER THREAD");
 				
 			return 0;
