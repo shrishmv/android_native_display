@@ -112,6 +112,7 @@ public class MainActivity extends Activity {
 		mtestVectors.add(new TestVector("/sdcard/news_640x480.yuv", 480, 640));
 		mtestVectors.add(new TestVector("/sdcard/180p.yuv", 180, 320));
 		mtestVectors.add(new TestVector("/sdcard/frame_cap.yuv", 768, 486));
+		
 		View viewToAdd1;
 
 		//TEXTUREVIEW - START
