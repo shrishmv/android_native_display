@@ -17,7 +17,7 @@
 
 native_display_params displayHandle[2];
 
-
+//sample comment
 jint Java_com_example_ndkdisplay_MainActivity_nativeDisplayInit(JNIEnv* env, jobject thiz, jint width, jint height, jstring args, jint id)
 {
 	if((id < 0) || (id >= 2)){
