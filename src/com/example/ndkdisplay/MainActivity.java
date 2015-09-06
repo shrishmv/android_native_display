@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
@@ -37,6 +38,8 @@ public class MainActivity extends Activity {
 	private RelativeLayout 		main_container;
 	
 	private ArrayList<TestVector> mtestVectors = new ArrayList<TestVector>();
+
+	private CameraUtils mCamera;
 	
 	private int fps_sleep = 33 * 1;
 	
@@ -44,7 +47,8 @@ public class MainActivity extends Activity {
 	//1 - VGA
 	//2 - 180p
 	//3 - random
-	private int index = 3;
+	//4 - 640 x 360
+	private int index1 = 0;
 	
 	
 	private OnClickListener onStartTest = new OnClickListener() {
@@ -59,7 +63,7 @@ public class MainActivity extends Activity {
 		
 		@Override
 		public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-			Log.d(LOGTAG, ">>>>>>>> onSurfaceTextureUpdated");
+			//Log.d(LOGTAG, ">>>>>>>> onSurfaceTextureUpdated");
 		}
 		
 		@Override
@@ -91,9 +95,9 @@ public class MainActivity extends Activity {
 				return;
 			}
 		
-			status = nativeDisplayInit(mtestVectors.get(index).width, 
-									   mtestVectors.get(index).height,
-									   mtestVectors.get(index).path, 0);
+			status = nativeDisplayInit(mtestVectors.get(index1).width, 
+									   mtestVectors.get(index1).height,
+									   mtestVectors.get(index1).path, 0);
 			if(0 != status){
 				Log.d(LOGTAG, " NATIVE INIT CALL FAILED");
 			}
@@ -107,32 +111,50 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+	
+		//View camHolder = findViewById(R.id.camholder);
+		
+		TextureView cameraTexture;
+		cameraTexture = (TextureView) findViewById(R.id.camtv);
+		
+		if(null == cameraTexture){
+			throw new NullPointerException("WWWTTFFF!!");
+		}
+		
+		mCamera = new CameraUtils(cameraTexture);
 		
 		mtestVectors.add(new TestVector("/sdcard/mixed720p.yuv", 720, 1280));
 		mtestVectors.add(new TestVector("/sdcard/news_640x480.yuv", 480, 640));
 		mtestVectors.add(new TestVector("/sdcard/180p.yuv", 180, 320));
-		mtestVectors.add(new TestVector("/sdcard/frame_cap.yuv", 768, 486));
+		mtestVectors.add(new TestVector("/sdcard/frame_cap_portrait_768_486.yuv", 768, 486));
+		mtestVectors.add(new TestVector("/sdcard/stride_dump_640x360__2.yuv", 360, 640));
 		
 		View viewToAdd1;
 
 		//TEXTUREVIEW - START
 		TextureView			mTextureView1;
 	
-		viewToAdd1 = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.texview, null, false);
+		//viewToAdd1 = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.texview, null, false);
 	
-		mTextureView1 = (TextureView) viewToAdd1.findViewById(id.tex_view1);
-		
+		//mTextureView1 = (TextureView) viewToAdd1.findViewById(id.tex_view1);
+		mTextureView1 = (TextureView) findViewById(R.id.sometv);
+		mTextureView1.setScaleX(1.00001f);
 		mTextureView1.setSurfaceTextureListener(onSurfaceTextChanged1);
 
 		Log.d(LOGTAG, " Adding view to main layout");
 		
-		viewToAdd1.setLayoutParams(new LinearLayout.LayoutParams(800, 800));
+		//viewToAdd1.setLayoutParams(new LinearLayout.LayoutParams(2000, 2000));
 	    
 		main_container = (RelativeLayout) findViewById(R.id.main_container);
+	
 		
-		main_container.addView(viewToAdd1);
+		//main_container.addView(viewToAdd1);
+	
 		
 		main_container.invalidate();
+		
+		//camHolder.bringToFront();
+		cameraTexture.bringToFront();
 		
 	}
 	
@@ -227,6 +249,7 @@ public class MainActivity extends Activity {
 				}
 				
 				nativeDisplayRenderFrame(0);
+				//runTest = false;
 
 			}
 			

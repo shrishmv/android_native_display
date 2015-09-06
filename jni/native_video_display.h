@@ -12,6 +12,10 @@
 #ifndef _NATIVE_VIDEO_DISPLAY_H_
 #define _NATIVE_VIDEO_DISPLAY_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define LOGTAG "NDK_DISPLAY"
 
 #define MAX_RAW_FRAME_COUNT 500
@@ -28,6 +32,9 @@ typedef struct _native_display_params_
     int frame_index;
 
     FILE *fp;
+
+    FILE *fp_rgb;
+
     char *yuv_buffer[MAX_RAW_FRAME_COUNT];
 
     int frame_count;
@@ -42,5 +49,9 @@ jint Java_com_example_ndkdisplay_MainActivity_nativeDisplayDeInit(JNIEnv* env, j
 jint Java_com_example_ndkdisplay_MainActivity_nativeDisplayRenderFrame(JNIEnv* env, jobject thiz,jint id);
 
 jint Java_com_example_ndkdisplay_MainActivity_nativeDisplaySetWindowPtr(JNIEnv* env, jobject thiz, jobject surface,jint id);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif //_NATIVE_VIDEO_DISPLAY_H_
